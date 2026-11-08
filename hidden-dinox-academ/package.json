@@ -1,0 +1,35 @@
+{
+  "name": "signal-app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test tests/academy.test.js tests/admin.test.js tests/referral.test.js tests/books.test.js tests/partner-links.test.js tests/i18n.test.js tests/deposits-cumulative.test.js tests/ban.test.js tests/forgot-password.test.js tests/forgot-security.test.js tests/features.test.js tests/daily-tests.test.js tests/chart-training.test.js tests/pretrade.test.js tests/mentor.test.js tests/mentor-memory.test.js tests/mentor-vision.test.js tests/ai-budget.test.js tests/daily-generator.test.js tests/bot.test.js tests/knowledge.test.js tests/knowledge-v2.test.js && node tests/wiring/run-wiring.js && node tests/wiring/scripts-cli.js && node tests/secret-scan.js",
+    "start": "node server.js",
+    "test:emulator": "node tests/emulator/smoke.js",
+    "audit": "node scripts/audit-firestore.js",
+    "reprocess": "node scripts/reprocess-deposits.js",
+    "test:seed": "node scripts/test-seed.js",
+    "inspect": "node scripts/inspect-trader.js",
+    "rebind": "node scripts/rebind-trader.js",
+    "set-role": "node scripts/set-role.js",
+    "import-course": "node scripts/import-course.js",
+    "inspect-courses": "node scripts/inspect-courses.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.13.5",
+    "express": "^5.2.1",
+    "firebase": "^12.9.0",
+    "firebase-admin": "^13.7.0",
+    "node-telegram-bot-api": "^0.67.0",
+    "simple-git": "^3.32.3",
+    "telegraf": "^4.16.3",
+    "ws": "^8.19.0"
+  },
+  "description": "",
+  "engines": {
+    "node": ">=18"
+  }
+}
