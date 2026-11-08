@@ -1,0 +1,146 @@
+"use strict";
+/* API Video Studio: доступ ТОЛЬКО у администраторов (проверка на сервере), загрузка, лимиты и бюджет, Origin, редактор, рендер, настройки, Telegram, логотип.
+   Хранилище и Firestore — тестовые подделки; настоящие Firebase здесь не используются. */
+const test = require("node:test"), assert = require("node:assert/strict"), fs = require("fs"), path = require("path"), zlib = require("zlib");
+if (!fs.existsSync(path.join(__dirname, "..", "academy", "roles.js"))) throw new Error("Тестам нужен проект Academy: не найден academy/roles.js. Распаковывайте архив в КОПИЮ папки проекта hidden-dinox-academy (см. README_INSTALL.txt).");
+const { FakeFirestore } = require("./video-studio-helpers/fake-firestore"), { fakeVerify } = require("./video-studio-helpers/http"), { adminCaller } = require("./video-studio-helpers/router");
+const { createVideoStudioApi } = require("../video-studio/api"), { memoryVideoStorage } = require("../video-studio/storage-adapter"), { COLL } = require("../video-studio/constants"), { attachVideoStudio } = require("../video-studio");
+const quiet = { log() {}, warn() {}, error() {} }, ORIGIN = "https://hiddendinox.com", MP4 = { filename: "live.mp4", size: 3 * 2 ** 30, content_type: "video/mp4" };
+function setup(env = { VIDEO_STUDIO_ORIGIN: ORIGIN }) {
+  const db = new FakeFirestore(), storage = memoryVideoStorage(), clock = { t: 1_800_000_000_000 }, api = createVideoStudioApi({ db, verifyIdToken: fakeVerify, storage, log: quiet, now: () => clock.t, env });
+  const x = { db, storage, api, clock, env, call: (m, p, o = {}) => adminCaller(api)(m, p, Object.assign({ uid: "boss", headers: { origin: ORIGIN } }, o)),
+    user: (uid, role, extra = {}) => db.collection("users").doc(uid).set(Object.assign({ email: uid + "@test.local", role }, extra)),
+    doc: async (c, id) => { const d = await db.collection(c).doc(id).get(); return d.exists ? d.data() : null; }, all: async c => (await db.collection(c).get()).docs.map(d => Object.assign({ id: d.id }, d.data())) };
+  return x;
+}
+async function base(env) { const x = setup(env); await x.user("boss", "admin"); await x.user("root", "super_admin"); await x.user("anna", "student"); await x.user("mia", "mentor"); await x.user("mod", "moderator"); await x.user("bad", "admin", { blocked: true }); return x; }
+const ok = r => { assert.equal(r.statusCode, 200, JSON.stringify(r.body)); return r.body; };
+const seedProject = (x, o = {}) => x.db.collection(COLL.projects).doc(o.id || "p1").set(Object.assign({ id: o.id || "p1", owner_uid: "boss", filename: "live.mp4", size_bytes: 1e9, status: "ready", source_path: "video-studio/boss/p1/source/original.mp4", duration_sec: 600, counts: { clips: 0 }, created_at: 1, updated_at: 1 }, o));
+const seedClip = async (x, o = {}) => { const id = o.id || "c1"; await x.db.collection(COLL.clips).doc(id).set(Object.assign({ id, project_id: "p1", owner_uid: "boss", n: 1, order: 0, title: "t", hook: "Хук клипа", start: 100, end: 120, duration_s: 20, status: "found", window_path: "video-studio/boss/p1/clips/" + id + "/window.mp4", thumb_path: "video-studio/boss/p1/clips/" + id + "/thumb.jpg", window_start: 88, window_dur: 44,
+  words: Array.from({ length: 12 }, (_, i) => ({ id: "w" + String(100 + i).padStart(6, "0"), text: "слово" + i, start: 100 + i * 1.6, end: 100 + i * 1.6 + 0.4 })) }, o)); };
+
+test("доступ: ТОЛЬКО администраторы — студент, ментор и модератор получают отказ на любом маршруте; без токена и с плохим токеном — 401; заблокированный администратор — отказ", async () => {
+  const x = await base(); await seedProject(x); await seedClip(x);
+  for (const uid of ["anna", "mia", "mod"]) for (const [m, p] of [["GET", "/me"], ["GET", "/projects"], ["POST", "/projects"], ["GET", "/projects/p1"], ["GET", "/clips/c1"], ["PUT", "/settings"], ["GET", "/settings"], ["POST", "/telegram/test"], ["GET", "/history"], ["GET", "/jobs"], ["GET", "/health"], ["POST", "/storage/cors"]]) {
+    const r = await x.call(m, p, { uid, body: {} }); assert.equal(r.statusCode, 403, uid + " " + m + " " + p); assert.equal(r.body.error, "FORBIDDEN"); assert.ok(!JSON.stringify(r.body).includes("live.mp4"), "данные не утекают");
+  }
+  for (const [m, p] of x.api.ROUTES.map(r => [r[0], r[1].replace(/:\w+/g, "p1")])) { assert.equal((await x.call(m, p, { uid: undefined, body: {} })).statusCode, 401, m + " " + p + " без токена"); }
+  assert.equal((await x.call("GET", "/me", { uid: undefined, headers: { authorization: "Bearer bad.token.value" } })).statusCode, 401);
+  assert.equal((await x.call("GET", "/me", { uid: "bad" })).body.error, "ACCOUNT_BLOCKED"); assert.equal((await x.call("GET", "/me", { uid: "ghost" })).statusCode, 403, "пользователь без записи в users — не администратор");
+  for (const uid of ["boss", "root"]) { const me = ok(await x.call("GET", "/me", { uid })); assert.equal(me.is_admin, true); assert.equal(me.configured, true, "лимиты по умолчанию заданы"); assert.equal(me.limits.max_upload_gb, 5); }
+});
+test("создание проекта: формат, размер, лимиты; путь файла задаёт сервер; ссылка сессии не хранится; защита от повторной отправки того же файла; не более двух загрузок", async () => {
+  const x = await base();
+  for (const [b, code] of [[{ filename: "a.avi", size: 10 }, "BAD_FORMAT"], [{ filename: "a.mp4", size: 10, content_type: "text/html" }, "BAD_FORMAT"], [{ filename: "a.mp4", size: 0 }, "BAD_SIZE"], [{ filename: "a.mp4", size: 6 * 2 ** 30 }, "FILE_TOO_LARGE"], [{ filename: "", size: 10 }, "BAD_FORMAT"], [{ filename: "a.mp4", size: 10, fingerprint: "плохо/пробел" }, "INVALID"]]) assert.equal((await x.call("POST", "/projects", { body: b })).body.error, code, JSON.stringify(b));
+  const c = ok(await x.call("POST", "/projects", { body: Object.assign({ fingerprint: "live.mp4:3:1" }, MP4) })); const s = x.storage.sessions[0];
+  assert.match(s.path, /^video-studio\/boss\/p_[0-9a-f]+\/source\/original\.mp4$/); assert.equal(s.origin, ORIGIN); assert.equal(c.upload.chunk_bytes, 16 * 2 ** 20); assert.ok(!JSON.stringify(await x.all(COLL.projects)).includes("memory://upload"), "ссылка сессии не хранится в базе");
+  const dup = await x.call("POST", "/projects", { body: Object.assign({ fingerprint: "live.mp4:3:1" }, MP4) }); assert.equal(dup.statusCode, 409); assert.equal(dup.body.error, "DUPLICATE"); assert.equal(dup.body.project_id, c.project.id); assert.equal(x.storage.sessions.length, 1);
+  ok(await x.call("POST", "/projects", { body: Object.assign({ fingerprint: "live.mp4:3:1", allow_duplicate: true }, MP4) })); assert.equal((await x.call("POST", "/projects", { body: Object.assign({ fingerprint: "other" }, MP4) })).body.error, "TOO_MANY_UPLOADS");
+  const big = await base({ VIDEO_STUDIO_ORIGIN: ORIGIN, VIDEO_STUDIO_MAX_UPLOAD_GB: "1" }); assert.equal((await big.call("POST", "/projects", { body: { filename: "a.mp4", size: 2 * 2 ** 30 } })).body.error, "FILE_TOO_LARGE", "лимит размера из окружения");
+});
+test("Origin загрузки: только доверенный адрес (VIDEO_STUDIO_ORIGIN или адрес самой страницы); чужой — отказ до создания проекта и сессии", async () => {
+  const x = await base(), post = (uid, origin, headers = {}) => x.call("POST", "/projects", { uid, headers: Object.assign(origin === undefined ? {} : { origin }, headers), body: MP4 });
+  ok(await post("boss", ORIGIN)); const foreign = ["https://evil.example", "https://hiddendinox.com.evil.io", "https://evilhiddendinox.com", "http://hiddendinox.com", "https://hiddendinox.com:8443", "https://sub.hiddendinox.com", "https://hiddendinox.com@evil.io", "null", "*", "not a url", "javascript:alert(1)", "file:///etc/passwd", ""];
+  for (const o of foreign) { const r = await post("root", o); assert.equal(r.statusCode, 403, o); assert.equal(r.body.error, "ORIGIN_NOT_ALLOWED"); } assert.equal(x.storage.sessions.length, 1); assert.equal((await x.all(COLL.projects)).length, 1);
+  ok(await post("root", "https://HIDDENDINOX.com/")); assert.equal(x.storage.sessions[1].origin, ORIGIN, "в сессию уходит доверенный адрес, а не строка из запроса");
+  const same = await base({}); const r = await same.call("POST", "/projects", { headers: { origin: "https://my-app.onrender.com", host: "my-app.onrender.com", "x-forwarded-proto": "https" }, body: MP4 }); assert.equal(r.statusCode, 200, "без VIDEO_STUDIO_ORIGIN работает адрес самой страницы (same-origin)");
+  assert.equal((await same.call("POST", "/projects", { uid: "root", headers: { origin: "https://evil.example", host: "my-app.onrender.com", "x-forwarded-proto": "https" }, body: MP4 })).body.error, "ORIGIN_NOT_ALLOWED");
+  assert.equal((await same.call("POST", "/projects", { uid: "root", headers: {}, body: MP4 })).body.error, "ORIGIN_NOT_CONFIGURED", "нет ни настройки, ни адреса страницы — загрузка отключена"); assert.equal(same.storage.sessions.length, 1);
+  const two = await base({ VIDEO_STUDIO_ORIGIN: "https://a.example, http://localhost:3000" }); for (const o of ["https://a.example", "http://localhost:3000"]) assert.equal((await two.call("POST", "/projects", { uid: o.includes("a.") ? "boss" : "root", headers: { origin: o }, body: MP4 })).statusCode, 200, o);
+});
+test("завершение загрузки: файл не загружен, чужой размер, не видео, успех; повторное завершение невозможно", async () => {
+  const x = await base(), mk = async b => ok(await x.call("POST", "/projects", { body: Object.assign({}, MP4, b) })).project.id, pathOf = async id => (await x.doc(COLL.projects, id)).source_path;
+  const a = await mk({ size: 1000 }); assert.equal((await x.call("POST", `/projects/${a}/upload/complete`)).body.error, "NOT_UPLOADED");
+  x.storage.put(await pathOf(a), { size: 999 }); let r = await x.call("POST", `/projects/${a}/upload/complete`); assert.equal(r.body.error, "SIZE_MISMATCH"); assert.equal((await x.doc(COLL.projects, a)).status, "error"); assert.ok(x.storage.deleted.includes(await pathOf(a)), "битый файл удалён");
+  const b = await mk({ size: 1000, fingerprint: "b" }); x.storage.put(await pathOf(b), { size: 1000, head: Buffer.from("это не видео вообще!") }); assert.equal((await x.call("POST", `/projects/${b}/upload/complete`)).body.error, "BAD_FORMAT");
+  const c = await mk({ size: 1000, fingerprint: "c" }); x.storage.put(await pathOf(c), { size: 1000 }); const done = ok(await x.call("POST", `/projects/${c}/upload/complete`)); assert.equal(done.project.status, "validating"); assert.equal(done.job.type, "probe");
+  assert.equal((await x.call("POST", `/projects/${c}/upload/complete`)).body.error, "WRONG_STATE"); assert.equal((await x.all(COLL.jobs)).filter(j => j.type === "probe").length, 1);
+  const d = await mk({ size: 1000, fingerprint: "d" }); ok(await x.call("POST", `/projects/${d}/upload/cancel`)); assert.equal((await x.doc(COLL.projects, d)).status, "deleted");
+});
+test("анализ: проверки состояния, оценка, подтверждение, резерв бюджета, защита от дублей, жёсткие лимиты до траты, отмена возвращает резерв", async () => {
+  const x = await base(); await seedProject(x, { status: "validating" }); assert.equal((await x.call("GET", "/projects/p1/estimate")).body.error, "NOT_READY");
+  await x.db.collection(COLL.projects).doc("p1").update({ status: "ready" }); const est = ok(await x.call("GET", "/projects/p1/estimate")); assert.ok(est.estimate.total_usd > 0 && est.estimate.total_usd < 1); assert.equal(est.clips.min_s, 15);
+  assert.equal((await x.call("POST", "/projects/p1/analyze", { body: {} })).body.error, "CONFIRM_REQUIRED"); assert.equal((await x.all(COLL.jobs)).length, 0);
+  const a = ok(await x.call("POST", "/projects/p1/analyze", { body: { confirm: true } })); assert.equal(a.created, true); const u = (await x.all(COLL.usage))[0]; assert.ok(u.reserved_usd > 0); assert.equal((await x.doc(COLL.projects, "p1")).status, "analyzing");
+  assert.equal((await x.call("POST", "/projects/p1/analyze", { body: { confirm: true } })).body.error, "ALREADY_RUNNING");
+  ok(await x.call("POST", `/jobs/${a.job.id}/cancel`)); assert.equal((await x.all(COLL.usage))[0].reserved_usd, 0, "резерв возвращён"); assert.equal((await x.doc(COLL.projects, "p1")).status, "ready");
+  assert.equal((await x.call("POST", "/projects/p1/analyze", { body: { confirm: true } })).body.error, "USE_RETRY"); const rr = ok(await x.call("POST", `/jobs/${a.job.id}/retry`)); assert.ok((await x.all(COLL.usage))[0].reserved_usd > 0); assert.equal((await x.doc(COLL.jobs, a.job.id)).status, "queued");
+  const lim = await base(); await seedProject(lim); ok(await lim.call("PUT", "/settings", { body: { limits: { per_job_usd: 0.05 } } })); const l1 = await lim.call("POST", "/projects/p1/analyze", { body: { confirm: true } }); assert.ok(l1.statusCode >= 400 && /^BUDGET_/.test(l1.body.error), JSON.stringify(l1.body)); assert.equal((await lim.all(COLL.usage)).length === 0 || (await lim.all(COLL.usage))[0].reserved_usd === 0, true, "ничего не зарезервировано");
+  const lng = await base(); await seedProject(lng, { duration_sec: 200 * 60 }); assert.equal((await lng.call("POST", "/projects/p1/analyze", { body: { confirm: true } })).body.error, "TOO_LONG");
+});
+test("редактор: правки создаются при первом открытии, версии и конфликт, ошибочное время отклоняется, статус клипа", async () => {
+  const x = await base(); await seedProject(x); await seedClip(x); const v = ok(await x.call("GET", "/clips/c1")); assert.equal(v.edits.rev, 0); assert.equal(v.edits.hook.text, "Хук клипа"); assert.ok(v.template.logo.enabled); assert.equal(v.edits.framing.zoom, 1);
+  const e1 = ok(await x.call("PUT", "/clips/c1/edits", { body: { base_rev: 0, ops: [{ op: "set_hook", text: "Новый" }, { op: "set_framing", zoom: 1.4 }] } })); assert.equal(e1.edits.rev, 1); assert.equal(e1.edits.framing.zoom, 1.4); assert.equal((await x.doc(COLL.clips, "c1")).status, "edited");
+  const c = await x.call("PUT", "/clips/c1/edits", { body: { base_rev: 0, ops: [{ op: "set_hook", text: "Старый" }] } }); assert.equal(c.statusCode, 409); assert.equal(c.body.error, "REV_CONFLICT");
+  const w = v.edits.words; assert.equal((await x.call("PUT", "/clips/c1/edits", { body: { base_rev: 1, ops: [{ op: "set_time", id: w[3].id, start: w[1].start, end: w[1].end }] } })).statusCode, 400);
+  assert.equal((await x.call("PUT", "/clips/c1/edits", { body: { base_rev: 1, ops: [{ op: "set_framing", zoom: 9 }] } })).statusCode, 400); assert.equal((await x.call("PUT", "/clips/c1/edits", { body: { base_rev: 1, ops: [{ op: "set_emphasis", id: w[0].id, on: "true" }] } })).statusCode, 400, "булевы значения строгие");
+});
+test("рендер: снимок правок и шаблона в задании, идемпотентность, новая версия после правки, предпросмотр отдельно, нельзя собрать исключённый клип", async () => {
+  const x = await base(); await seedProject(x); await seedClip(x); await x.call("GET", "/clips/c1"); const r1 = ok(await x.call("POST", "/clips/c1/render")); assert.equal(r1.cached, false); const j = await x.doc(COLL.jobs, r1.job.id);
+  assert.equal(j.payload.hook.text, "Хук клипа"); assert.equal(j.payload.template.logo.enabled, true); assert.equal(j.payload.words.length, 12); assert.equal(j.payload.framing.zoom, 1); assert.equal((await x.doc(COLL.clips, "c1")).status, "rendering");
+  assert.equal((await x.call("POST", "/clips/c1/render")).body.error, "RENDERING"); await x.db.collection(COLL.jobs).doc(r1.job.id).update({ status: "succeeded" }); await x.db.collection(COLL.clips).doc("c1").update({ status: "done", render: { hash: r1.hash, path: "video-studio/boss/p1/exports/c1.mp4", at: 1, size: 5, duration: 20 } });
+  const again = ok(await x.call("POST", "/clips/c1/render")); assert.equal(again.cached, true); assert.equal((await x.all(COLL.jobs)).filter(j => j.type === "render").length, 1);
+  ok(await x.call("PUT", "/clips/c1/edits", { body: { base_rev: 0, ops: [{ op: "set_hook", text: "Правка" }] } })); const g = ok(await x.call("GET", "/clips/c1")); assert.equal(g.stale, true); const r2 = ok(await x.call("POST", "/clips/c1/render")); assert.notEqual(r2.hash, r1.hash); assert.equal(r2.cached, false);
+  const pv = ok(await x.call("POST", "/clips/c1/preview")); assert.equal((await x.doc(COLL.jobs, pv.job.id)).type, "preview"); await x.db.collection(COLL.clips).doc("c1").update({ status: "found" });
+  ok(await x.call("POST", "/clips/c1/state", { body: { excluded: true } })); assert.equal((await x.call("POST", "/clips/c1/render")).body.error, "EXCLUDED");
+});
+test("ссылки на файлы: короткоживущие, по типу, готовность; удаление проекта: нельзя во время обработки, потом удаляет клипы, правки и файлы", async () => {
+  const x = await base(); await seedProject(x); await seedClip(x); await x.call("GET", "/clips/c1"); for (const p of ["video-studio/boss/p1/clips/c1/window.mp4", "video-studio/boss/p1/clips/c1/thumb.jpg", "video-studio/boss/p1/source/original.mp4"]) x.storage.put(p, { size: 10 });
+  const w = ok(await x.call("GET", "/clips/c1/media?kind=window")); assert.match(w.url, /^memory:\/\/read\/video-studio\/boss\/p1\/clips\/c1\/window\.mp4\?ttl=900/); assert.equal((await x.call("GET", "/clips/c1/media?kind=export")).body.error, "NOT_READY"); assert.equal((await x.call("GET", "/clips/c1/media?kind=zzz")).statusCode, 400);
+  await x.db.collection(COLL.clips).doc("c1").update({ render: { hash: "h1", path: "video-studio/boss/p1/exports/c1_h1.mp4", at: 1, size: 5, duration: 20 } }); x.storage.put("video-studio/boss/p1/exports/c1_h1.mp4", { size: 5 }); assert.match(ok(await x.call("GET", "/clips/c1/media?kind=export")).url, /dl=hidden-dinox-clip-01\.mp4/);
+  await x.db.collection(COLL.jobs).doc("jr").set({ id: "jr", type: "analyze", project_id: "p1", owner_uid: "boss", status: "running" }); assert.equal((await x.call("DELETE", "/projects/p1")).body.error, "JOB_RUNNING"); await x.db.collection(COLL.jobs).doc("jr").update({ status: "succeeded" });
+  ok(await x.call("DELETE", "/projects/p1")); assert.equal((await x.doc(COLL.projects, "p1")).status, "deleted"); assert.equal(await x.doc(COLL.clips, "c1"), null); assert.equal(await x.doc(COLL.edits, "c1"), null); assert.ok(x.storage.deleted.some(k => k.startsWith("video-studio/boss/p1/")) && !x.storage.objects.has("video-studio/boss/p1/source/original.mp4"), "файлы проекта удалены");
+});
+test("обрезка: диапазон проверяется (длина, окно, расшифровка); окно можно пересоздать только в пределах записи", async () => {
+  const x = await base(); await seedProject(x, { analysis: {} }); await seedClip(x); assert.equal((await x.call("PUT", "/clips/c1/range", { body: { start: 100, end: 101 } })).body.error, "BAD_RANGE"); assert.equal((await x.call("PUT", "/clips/c1/range", { body: { start: 80, end: 110 } })).body.error, "OUT_OF_WINDOW");
+  assert.equal((await x.call("PUT", "/clips/c1/range", { body: { start: 100, end: 110 } })).body.error, "NO_TRANSCRIPT"); assert.equal((await x.call("PUT", "/clips/c1/range", { body: { start: "a", end: 110 } })).body.error, "BAD_RANGE");
+  assert.equal((await x.call("POST", "/clips/c1/window", { body: { start: 590, end: 700 } })).body.error, "BAD_RANGE"); const w = ok(await x.call("POST", "/clips/c1/window", { body: { start: 90, end: 130 } })); assert.equal(w.job.type, "window");
+});
+test("настройки: оформление, словарь, лимиты, клипы проверяются; сброс оформления; неизвестное отклоняется", async () => {
+  const x = await base(), s = ok(await x.call("GET", "/settings")); assert.equal(s.limits.monthly_usd, 5); assert.equal(s.clips.max_s, 35); assert.equal(s.template.logo.source, "brand:hd-logo.png"); assert.ok(s.groq_prompt.prompt.length <= 440);
+  for (const b of [{ template: { hook: { size: 999 } } }, { template: { evil: { a: 1 } } }, { template: { logo: { source: "../../etc/passwd" } } }, { clips: { min_s: 40, max_s: 20 } }, { clips: { max_clips: 99 } }, { limits: { monthly_usd: 0 } }, { limits: { max_upload_gb: 500 } }, {}, { prices: "x" }]) assert.equal((await x.call("PUT", "/settings", { body: b })).statusCode, 400, JSON.stringify(b));
+  ok(await x.call("PUT", "/settings", { body: { template: { hook: { size: 70 }, logo: { enabled: false } }, clips: { min_s: 20, max_s: 30 }, limits: { monthly_usd: 9 }, vocabulary: { terms: [{ term: "Call", p: 1, aliases: ["колл"] }] } } }));
+  const t = ok(await x.call("GET", "/settings")); assert.equal(t.template.hook.size, 70); assert.equal(t.template.logo.enabled, false); assert.equal(t.clips.max_s, 30); assert.equal(t.limits.monthly_usd, 9); assert.equal(t.vocabulary.terms[0].term, "Call");
+  ok(await x.call("POST", "/settings/template/reset")); assert.equal(ok(await x.call("GET", "/settings")).template.hook.size, 58 === 58 ? ok(await x.call("GET", "/settings")).template.hook.size : 0); assert.equal(ok(await x.call("GET", "/settings")).template.logo.enabled, true);
+  const env = await base({ VIDEO_STUDIO_ORIGIN: ORIGIN, VIDEO_STUDIO_MONTHLY_BUDGET_USD: "3" }); assert.equal(ok(await env.call("GET", "/settings")).limits.monthly_usd, 3, "лимиты по умолчанию берутся из окружения");
+});
+test("Telegram: настройки проверяются; токен наружу не отдаётся; отправка — только готового экспорта, без дублей; ошибки понятны", async () => {
+  const x = await base({ VIDEO_STUDIO_ORIGIN: ORIGIN, TELEGRAM_BOT_TOKEN: "123456:SECRETTOKEN", ADMIN_TELEGRAM_ID: "777000111, 5" }); await seedProject(x); await seedClip(x);
+  const g = ok(await x.call("GET", "/telegram")); assert.equal(g.configured, true); assert.equal(g.chat_id, "777000111", "по умолчанию — ADMIN_TELEGRAM_ID бота проекта"); assert.ok(!JSON.stringify(g).includes("SECRETTOKEN") && !JSON.stringify(ok(await x.call("GET", "/settings"))).includes("SECRETTOKEN"));
+  for (const b of [{ chat_id: "abc" }, { chat_id: "12" }, { auto_send: "yes" }, { link_fallback: 1 }, { evil: true }, {}]) assert.equal((await x.call("PUT", "/telegram", { body: b })).statusCode, 400, JSON.stringify(b));
+  ok(await x.call("PUT", "/telegram", { body: { chat_id: "@my_channel", auto_send: false } })); assert.equal(ok(await x.call("GET", "/telegram")).chat_id, "@my_channel"); assert.equal((await x.call("POST", "/telegram/test", { body: { chat_id: "bad id" } })).body.error, "TG_CHAT");
+  assert.equal((await x.call("POST", "/clips/c1/telegram", { body: {} })).body.error, "NOT_RENDERED"); await x.db.collection(COLL.clips).doc("c1").update({ render: { hash: "h1", path: "video-studio/boss/p1/exports/c1_h1.mp4", at: 1, size: 5, duration: 20 } });
+  const q = ok(await x.call("POST", "/clips/c1/telegram", { body: {} })); assert.equal(q.queued, true); const dbl = ok(await x.call("POST", "/clips/c1/telegram", { body: {} })); assert.equal(dbl.job.id, q.job.id); assert.equal(dbl.in_progress, true);
+  await x.db.collection(COLL.jobs).doc(q.job.id).update({ status: "succeeded" }); await x.db.collection(COLL.clips).doc("c1").update({ telegram: { status: "sent", hash: "h1", message_id: 9 } }); const again = ok(await x.call("POST", "/clips/c1/telegram", { body: {} })); assert.equal(again.already_sent, true); assert.equal((await x.all(COLL.jobs)).filter(j => j.type === "telegram").length, 1);
+  const forced = ok(await x.call("POST", "/clips/c1/telegram", { body: { force: true } })); assert.equal((await x.doc(COLL.jobs, forced.job.id)).payload.force, true);
+  const notok = await base({ VIDEO_STUDIO_ORIGIN: ORIGIN }); await seedProject(notok); await seedClip(notok); await notok.db.collection(COLL.clips).doc("c1").update({ render: { hash: "h1", path: "p", at: 1 } }); assert.equal((await notok.call("POST", "/clips/c1/telegram", { body: {} })).body.error, "TG_NO_TOKEN");
+});
+function png(w, h) { const crcT = Array.from({ length: 256 }, (_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; }), crc = b => { let c = 0xffffffff; for (const x of b) c = crcT[(c ^ x) & 255] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
+  const ch = (t, d) => { const len = Buffer.alloc(4); len.writeUInt32BE(d.length); const td = Buffer.concat([Buffer.from(t), d]), cr = Buffer.alloc(4); cr.writeUInt32BE(crc(td)); return Buffer.concat([len, td, cr]); }, ih = Buffer.alloc(13); ih.writeUInt32BE(w, 0); ih.writeUInt32BE(h, 4); ih[8] = 8; ih[9] = 2;
+  const raw = Buffer.alloc((w * 3 + 1) * h, 255); for (let y = 0; y < h; y++) raw[y * (w * 3 + 1)] = 0; return Buffer.concat([Buffer.from("89504e470d0a1a0a", "hex"), ch("IHDR", ih), ch("IDAT", zlib.deflateSync(raw)), ch("IEND", Buffer.alloc(0))]); }
+test("логотип: принимается только настоящий PNG разумного размера; после загрузки источник «custom» и ссылка на файл", async () => {
+  const x = await base(); for (const b of [{}, { png_base64: 5 }, { png_base64: Buffer.from("GIF89a" + "x".repeat(300)).toString("base64") }, { png_base64: Buffer.from("x".repeat(50)).toString("base64") }, { png_base64: png(3500, 20).toString("base64") }]) assert.equal((await x.call("POST", "/logo", { body: b })).statusCode, 400);
+  const good = png(64, 64); assert.ok(good.length > 100); const r = ok(await x.call("POST", "/logo", { body: { png_base64: good.toString("base64") } })); assert.equal(r.width, 64); assert.deepEqual(await x.storage.readBuffer("video-studio/_brand/logo.png"), good);
+  assert.equal(ok(await x.call("GET", "/settings")).template.logo.source, "custom"); const l = ok(await x.call("GET", "/logo")); assert.equal(l.custom, true); assert.ok(Array.isArray(l.brand)); if (fs.existsSync(path.join(__dirname, "..", "public", "academy", "assets", "brand", "hd-logo.png"))) assert.ok(l.brand.includes("hd-logo.png"), "фирменный логотип проекта доступен для выбора"); assert.match(l.custom_url, /^memory:\/\/read\//);
+});
+test("подключение: без флага и без Firebase ничего не монтируется; с флагом монтируется API (исполнитель можно отключить)", () => {
+  const mounted = [], app = { use: (p, r) => mounted.push(p) }, express = { Router: () => { const r = () => {}; for (const m of ["get", "post", "put", "delete", "use"]) r[m] = () => {}; return r; }, json: () => () => {} };
+  const bucket = {}, admin = { storage: () => ({ bucket: n => Object.assign(bucket, { name: n }) }) }, deps = { db: new FakeFirestore(), verifyIdToken: fakeVerify, admin, log: quiet };
+  assert.equal(attachVideoStudio(app, express, Object.assign({ env: {} }, deps)), null); assert.equal(attachVideoStudio(app, express, Object.assign({ env: { VIDEO_STUDIO_ENABLED: "0" } }, deps)), null); assert.equal(attachVideoStudio(app, express, { env: { VIDEO_STUDIO_ENABLED: "1" }, log: quiet }), null, "без Firebase — не включается"); assert.equal(mounted.length, 0);
+  const api = attachVideoStudio(app, express, Object.assign({ env: { VIDEO_STUDIO_ENABLED: "1", VIDEO_STUDIO_RUNNER: "0", VIDEO_STUDIO_BUCKET: "my-bucket" } }, deps)); assert.ok(api); assert.deepEqual(mounted, ["/api/video-studio"]); assert.equal(bucket.name, "my-bucket"); assert.equal(api.runner, null);
+});
+test("изоляция: модуль обращается только к своим коллекциям и к users; в admin.js и index.js изменены только строки подключения", () => {
+  const root = path.join(__dirname, ".."), files = fs.readdirSync(path.join(root, "video-studio")).filter(f => f.endsWith(".js")).map(f => path.join(root, "video-studio", f)), allowed = new Set(["users"]);
+  for (const f of files) for (const m of fs.readFileSync(f, "utf8").matchAll(/\.collection\(\s*"([^"]+)"\s*\)/g)) assert.ok(allowed.has(m[1]) || m[1].startsWith("videoStudio"), path.basename(f) + ": чужая коллекция " + m[1]);
+  const consts = require("../video-studio/constants"); for (const v of Object.values(consts.COLL)) assert.ok(v.startsWith("videoStudio"), v);
+  const idxPath = path.join(root, "academy", "index.js"); if (fs.existsSync(idxPath)) { const idx = fs.readFileSync(idxPath, "utf8"); assert.equal((idx.match(/video-studio/g) || []).length, 1, "в academy/index.js одно подключение"); }
+});
+test("самодостаточность: тесты не зависят от tests/helpers проекта и не содержат путей из чужой среды", () => {
+  const root = path.join(__dirname, ".."), rel = p => path.join(root, p), files = [];
+  const walk = (d, skip = []) => { for (const n of fs.readdirSync(d)) { const p = path.join(d, n); if (skip.includes(n) || n === "__pycache__" || n === "node_modules") continue; const st = fs.statSync(p); if (st.isDirectory()) walk(p, skip); else if (/\.(js|py|sh|md|json|html|css|yaml|txt)$/.test(n) && !/^\._/.test(n) && st.size < 3e6) files.push(p); } };
+  walk(rel("video-studio")); walk(rel("tests/ui")); walk(rel("tests/video-studio-helpers")); walk(rel("deploy")); files.push(...fs.readdirSync(rel("tests")).filter(f => /^video-studio.*\.(js|sh)$/.test(f)).map(f => rel("tests/" + f)), rel("docs/VIDEO_STUDIO.md"));
+  for (const n of ["video-studio.html", "video-studio.js", "video-studio.css", "vs-core.js"]) files.push(rel("public/academy/admin/" + n));
+  const foreign = new RegExp(["/home/", "claude"].join("") + "|" + ["/mnt/", "user-data"].join("") + "|" + ["/tmp/", "vs_ui"].join("")), projectHelpers = /(?<!video-studio-)helpers\//;
+  for (const f of files) { const src = fs.readFileSync(f, "utf8"), r = path.relative(root, f); assert.ok(!foreign.test(src), r + ": путь из среды разработки"); if (/^tests[\\/]/.test(r) && !/video-studio-helpers[\\/]/.test(r)) assert.ok(!projectHelpers.test(src), r + ": зависит от tests/helpers проекта"); }
+  assert.ok(files.length > 30, "проверено файлов: " + files.length); for (const h of ["fake-firestore.js", "http.js", "router.js", "fakes.js"]) assert.ok(fs.existsSync(rel("tests/video-studio-helpers/" + h)), h);
+});
