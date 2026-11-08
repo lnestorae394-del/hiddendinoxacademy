@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>HIDDEN DINOX ACADEMY</title>
+<link rel="icon" href="assets/brand/hd-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/academy.css?v=20261026-2">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+<div class="bg" aria-hidden="true"><canvas id="particles"></canvas></div>
+<div class="app acad">
+  <header>
+    <a class="brand" href="academy.html" aria-label="Hidden Dinox Academy">
+      <img src="assets/brand/hd-logo.png" alt="HiddenDinox" width="386" height="288">
+      <div class="wordmark">HIDDEN DINOX<span>ACADEMY</span></div>
+    </a>
+    <div class="hd-right">
+      <div class="langs" role="group" aria-label="Language"><span class="pill" aria-hidden="true"></span>
+        <button type="button" data-lang="ru" aria-pressed="true">RU</button><button type="button" data-lang="en" aria-pressed="false">EN</button><button type="button" data-lang="ua" aria-pressed="false">UA</button></div>
+      <button type="button" class="prof" id="profBtn" aria-haspopup="true" aria-expanded="false"><span class="av" id="avH"></span><span class="em" id="emH"></span></button>
+    </div>
+  </header>
+  <div class="menu" id="menu" hidden><small data-t="signedAs"></small><b id="menuEmail"></b>
+    <button type="button" class="btn btn-quiet" data-signout><span class="label" data-t="signOut"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11"/></svg></button></div>
+
+  <main class="grid" id="grid">
+    <section class="panel hero-card" aria-labelledby="hTitle">
+      <div class="hero-glow" aria-hidden="true"></div>
+      <img class="hero-mascot" src="assets/brand/hd-mascot.webp" alt="" width="600" height="630" aria-hidden="true">
+      <div class="hero-copy"><h1 id="hTitle"><span data-t="w1"></span><span data-t="w2"></span></h1><p data-t="wSub"></p></div>
+    </section>
+
+    
+
+    <section class="panel p-status" aria-labelledby="sTitle"><h2 id="sTitle" data-t="statusH"></h2><div id="statusBody"></div></section>
+
+    <section class="panel p-progress" aria-labelledby="pTitle"><h2 id="pTitle" data-t="progH"></h2>
+      <div class="prog-empty"><div class="ring" aria-hidden="true">—</div><div><p data-t="progEmptyT"></p><small data-t="progEmpty"></small></div></div>
+      <div class="kv"><div><span data-t="progM"></span><b>—</b></div><div><span data-t="progN"></span><b>—</b></div></div>
+      <div class="prog-list" id="progList" hidden></div>
+    </section>
+
+    <section class="hd-banners" id="bannerSec" aria-label="Hidden Dinox" hidden>
+      <div class="hd-banner-row" id="bannerRow"></div>
+      <button type="button" class="hd-bnav prev" id="bPrev" aria-label="←" hidden><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <button type="button" class="hd-bnav next" id="bNext" aria-label="→" hidden><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+    </section>
+
+    <section class="panel p-ann" id="annPanel" aria-labelledby="annTitle" hidden><h2 id="annTitle" data-t="annH"></h2><div class="ann-list" id="annList"></div></section>
+
+    <section class="panel p-learn" id="learnPanel" aria-labelledby="learnTitle"><h2 id="learnTitle" data-t="learnH"></h2><div class="learn-list" id="learnList" aria-busy="true"><div class="course-card skel" aria-hidden="true"><div><span class="sk sk-t"></span><span class="sk sk-p"></span><span class="sk sk-b"></span></div></div></div></section>
+
+    <section class="panel p-secs" aria-labelledby="secTitle"><h2 id="secTitle" data-t="soonH"></h2>
+      <div class="secs" id="secsList">
+        <article class="sec" aria-disabled="true"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9.5 16.5h5"/></svg></div><div><h3 data-t="c1"></h3><p data-t="c1d"></p></div><span class="tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span data-t="soon"></span></span></article>
+        <article class="sec" aria-disabled="true"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6M9 4a1 1 0 0 0-1 1v1h8V5a1 1 0 0 0-1-1M8 6H6a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-2M9 12l2 2 4-4"/></svg></div><div><h3 data-t="c2"></h3><p data-t="c2d"></p></div><span class="tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span data-t="soon"></span></span></article>
+        <article class="sec" aria-disabled="true"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16M7 15l4-4 3 3 5-6"/><path d="M15 8h4v4"/></svg></div><div><h3 data-t="c3"></h3><p data-t="c3d"></p></div><span class="tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span data-t="soon"></span></span></article>
+      </div>
+    </section>
+
+    <section class="panel p-profile" aria-labelledby="prTitle"><h2 id="prTitle" class="sr" hidden data-t="profile"></h2>
+      <div class="profile"><span class="av" id="avP"></span><div><b id="emP"></b><small data-t="acctKind"></small></div></div>
+      <button type="button" class="btn btn-quiet" data-signout><span class="label" data-t="signOut"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11"/></svg></button>
+    </section>
+  </main>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="js/i18n-academy.js?v=20261026-2"></script>
+<script src="js/config.js?v=20261026-2"></script>
+<script src="js/api.js?v=20261026-2"></script>
+<script src="js/ui.js?v=20261026-2"></script>
+<script type="module" src="js/firebase.js?v=20261026-2" onerror="window.__hdFbReject&&window.__hdFbReject({code:'NETWORK'})"></script>
+<script src="js/pages/academy.js?v=20261026-2"></script>
+</body>
+</html>
