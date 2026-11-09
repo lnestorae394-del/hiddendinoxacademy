@@ -1,0 +1,11 @@
+# Environment Variables для STAGING на Render (hidden-dinox-video-staging). Значения секретов вводите ТОЛЬКО в панели Render.
+VIDEO_STUDIO_ENABLED=1
+VIDEO_STUDIO_STORAGE=r2
+VIDEO_STUDIO_ORIGIN=https://hidden-dinox-video-staging.onrender.com
+R2_ENDPOINT=            # https://<ID_аккаунта>.r2.cloudflarestorage.com  (БЕЗ имени бакета и без пути)
+R2_ACCESS_KEY_ID=       # из R2 → Manage API tokens (Object Read & Write на бакет hidden-dinox-videos)
+R2_SECRET_ACCESS_KEY=   # показывается один раз при создании токена
+R2_BUCKET=hidden-dinox-videos
+R2_REGION=auto
+# Уже должны быть (используются как есть): GROQ_API_KEY, ANTHROPIC_API_KEY, TELEGRAM_BOT_TOKEN, ADMIN_TELEGRAM_ID, ключи Firebase staging
+# Необязательно: VIDEO_STUDIO_RETENTION_DAYS=30  (кнопка «Настроить хранилище» добавит правило удаления файлов через N дней)

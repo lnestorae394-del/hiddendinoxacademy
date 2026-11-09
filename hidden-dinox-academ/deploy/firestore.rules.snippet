@@ -1,0 +1,9 @@
+// ДОБАВЬТЕ в существующие правила Firestore: коллекции Video Studio закрыты для клиентов, читает и пишет только сервер (Admin SDK обходит правила).
+match /videoStudioProjects/{id}  { allow read, write: if false; }
+match /videoStudioJobs/{id}      { allow read, write: if false; }
+match /videoStudioClips/{id}     { allow read, write: if false; }
+match /videoStudioEdits/{id}     { allow read, write: if false; }
+match /videoStudioUsage/{id}     { allow read, write: if false; }
+match /videoStudioSettings/{id}  { allow read, write: if false; }
+match /videoStudioEvents/{id}    { allow read, write: if false; }
+// Составные индексы не нужны: все запросы — по одному полю (==).
