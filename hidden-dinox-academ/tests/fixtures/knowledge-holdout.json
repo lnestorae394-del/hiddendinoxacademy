@@ -1,0 +1,153 @@
+{
+ "meta": {
+  "purpose": "Отложенный набор: не использовался при настройке поиска; оценивает качество честно.",
+  "count": 20
+ },
+ "queries": [
+  {
+   "lang": "ru",
+   "q": "в какой момент появляется точка входа по системе",
+   "expect": [
+    "hidden-reaction-system#m2l0"
+   ]
+  },
+  {
+   "lang": "ru",
+   "q": "какую ошибку совершают трейдеры при входе",
+   "expect": [
+    "hidden-reaction-system#m2l1",
+    "hidden-reaction-system#m3l3"
+   ]
+  },
+  {
+   "lang": "ru",
+   "q": "как подтвердить вход перед сделкой",
+   "expect": [
+    "hidden-reaction-system#m2l3"
+   ]
+  },
+  {
+   "lang": "ru",
+   "q": "что такое реакция рынка в системе",
+   "expect": [
+    "hidden-reaction-system#m1l3"
+   ]
+  },
+  {
+   "lang": "ru",
+   "q": "как эмоции мешают дисциплине",
+   "expect": [
+    "hidden-reaction-system#m3l0",
+    "risk-management-binary#m3l0"
+   ]
+  },
+  {
+   "lang": "ru",
+   "q": "пример полного цикла сделки",
+   "expect": [
+    "hidden-reaction-system#m3l2"
+   ]
+  },
+  {
+   "lang": "ru",
+   "q": "hidden reversal и hidden breakdown разница",
+   "expect": [
+    "hidden-reaction-system#m5l0"
+   ]
+  },
+  {
+   "lang": "ru",
+   "q": "что такое displacement и агрессия крупного участника",
+   "expect": [
+    "smart-money-concepts-binary#m2l1"
+   ]
+  },
+  {
+   "lang": "ru",
+   "q": "где в волне лучше открывать контракт импульс или коррекция",
+   "expect": [
+    "smart-money-concepts-binary#m2l0"
+   ]
+  },
+  {
+   "lang": "ru",
+   "q": "что такое breaker block",
+   "expect": [
+    "smart-money-concepts-binary#m5l1"
+   ]
+  },
+  {
+   "lang": "ru",
+   "q": "top-down анализ с какого таймфрейма начинать",
+   "expect": [
+    "smart-money-concepts-binary#m8l0"
+   ]
+  },
+  {
+   "lang": "ru",
+   "q": "как собрать сетап из сценариев A и B",
+   "expect": [
+    "smart-money-concepts-binary#m10l1"
+   ]
+  },
+  {
+   "lang": "ru",
+   "q": "когда лучше вообще не торговать фильтры",
+   "expect": [
+    "smart-money-concepts-binary#m12l0",
+    "risk-management-binary#m1l1"
+   ]
+  },
+  {
+   "lang": "ru",
+   "q": "как вести журнал сделок и статистику",
+   "expect": [
+    "smart-money-concepts-binary#m12l2",
+    "risk-management-binary#m3l1"
+   ]
+  },
+  {
+   "lang": "ru",
+   "q": "что такое математическое ожидание сделки",
+   "expect": [
+    "risk-management-binary#m0l1"
+   ]
+  },
+  {
+   "lang": "ru",
+   "q": "серия убыточных сделок и просадка депозита",
+   "expect": [
+    "risk-management-binary#m2l0"
+   ]
+  },
+  {
+   "lang": "ru",
+   "q": "как составить личный риск-план",
+   "expect": [
+    "risk-management-binary#m4l0"
+   ]
+  },
+  {
+   "lang": "en",
+   "q": "what is equilibrium in a dealing range",
+   "expect": [
+    "smart-money-concepts-binary#m7l0"
+   ]
+  },
+  {
+   "lang": "en",
+   "q": "how do sessions and kill zones affect trading",
+   "expect": [
+    "smart-money-concepts-binary#m9l0"
+   ]
+  },
+  {
+   "lang": "ua",
+   "q": "як вести журнал угод",
+   "expect": [
+    "smart-money-concepts-binary#m12l2",
+    "risk-management-binary#m3l1"
+   ]
+  }
+ ]
+}
