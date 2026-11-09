@@ -1,0 +1,40 @@
+/* HIDDEN DINOX ACADEMY — оформление уроков (общий стиль академии и предпросмотра админ-панели) */
+.hdl{--g:#8bea24;--g2:#b8f04a;--t:#f2f5ef;--m:#8a9187;--s:#c9cfc5;--line:rgba(255,255,255,.1);color:var(--t);font:15.5px/1.65 "Manrope",system-ui,sans-serif;overflow-wrap:anywhere}
+.hdl p{margin:0 0 12px}.hdl ul,.hdl ol{margin:0 0 12px;padding-left:22px}.hdl li{margin:4px 0}
+.hdl a{color:var(--g)}.hdl strong{color:#fff}
+.hdl-h{font:600 clamp(19px,5vw,24px)/1.25 "Unbounded",system-ui,sans-serif;margin:26px 0 12px;letter-spacing:-.01em}
+.hdl h3{font:700 16.5px/1.35 "Manrope",system-ui,sans-serif;margin:0 0 10px}
+.hdl-outcome{padding:12px 14px;border-radius:14px;background:rgba(139,234,36,.07);border:1px solid rgba(139,234,36,.3);color:var(--s)}
+.hdl-outcome span{color:var(--g);font-weight:700}
+.hdl-text,.hdl-terms,.hdl-summary,.hdl-example,.hdl-practice,.hdl-quiz{margin:18px 0}
+.hdl-terms dl{margin:0;display:grid;gap:8px}.hdl-terms dt{font-weight:700;color:var(--g2)}.hdl-terms dd{margin:0 0 6px;color:var(--s)}
+.hdl-note{margin:18px 0;padding:14px 16px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.03)}
+.hdl-note>strong{display:block;margin-bottom:6px;font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+.hdl-note.important{border-color:rgba(139,234,36,.4)}.hdl-note.important>strong{color:var(--g)}
+.hdl-note.warning{border-color:rgba(255,107,94,.45);background:rgba(255,107,94,.05)}.hdl-note.warning>strong{color:#ff8a7f}
+.hdl-note.editorial{border-style:dashed;border-color:rgba(232,185,59,.55);background:rgba(232,185,59,.05)}.hdl-note.editorial>strong{color:#e8b93b}
+.hdl-note.source{border-color:var(--line);color:var(--m);font-size:14px}.hdl-note.source>strong{color:var(--m)}
+.hdl-note.risk{border-color:rgba(255,107,94,.35)}.hdl-note.risk>strong{color:#ff8a7f}
+.hdl-kicker{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--g);margin-bottom:6px}
+.hdl-example,.hdl-practice,.hdl-quiz,.hdl-summary{padding:16px;border-radius:18px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01))}
+.hdl-summary{border-color:rgba(139,234,36,.35)}
+.hdl-practice details{margin-top:8px;color:var(--s)}.hdl-practice summary{cursor:pointer;color:var(--g);font-weight:700}
+.hdl-chart{margin:16px 0;padding:10px;border-radius:16px;background:#050605;border:1px solid var(--line)}
+.hdl-chart-title{font-size:13.5px;font-weight:700;margin:2px 4px 6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.hdl-chart-svg{display:block;width:100%;max-width:640px;height:auto;margin:0 auto;font-family:"Manrope",system-ui,sans-serif}
+.hdl-legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12px;color:var(--s);margin:6px 4px 0}.hdl-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.hdl-caption{font-size:12.5px;color:var(--m);margin:6px 4px 0}
+.hdl-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--s)}.hdl-badge.good{color:var(--g);border-color:rgba(139,234,36,.5)}.hdl-badge.bad{color:#ff8a7f;border-color:rgba(255,107,94,.5)}
+.hdl-image{margin:16px 0}.hdl-image img{display:block;max-width:100%;height:auto;border-radius:14px;margin:0 auto}.hdl-image figcaption{font-size:13px;color:var(--m);margin-top:6px;text-align:center}
+.hdl-video{position:relative;padding-top:56.25%;border-radius:14px;overflow:hidden;background:#000}.hdl-video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.hdl-q{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:0 0 12px;min-width:0}
+.hdl-q legend{font-weight:700;padding:0 4px}
+.hdl-q label{display:flex;gap:10px;align-items:flex-start;padding:8px 6px;border-radius:10px;cursor:pointer}.hdl-q label:hover{background:rgba(255,255,255,.04)}
+.hdl-q input{accent-color:#8bea24;margin-top:5px;flex:none}
+.hdl-q.ok{border-color:rgba(139,234,36,.55)}.hdl-q.bad{border-color:rgba(255,107,94,.55)}
+.hdl-q-res{font-size:14px;color:var(--s);margin-top:6px}.hdl-q.ok .hdl-q-res{color:#cfeeb0}.hdl-q.bad .hdl-q-res{color:#ffc9c3}
+.hdl-btn{appearance:none;border:0;border-radius:12px;padding:12px 18px;font:700 14px "Manrope",system-ui,sans-serif;background:linear-gradient(180deg,#b8f04a,#8bea24);color:#061000;cursor:pointer}
+.hdl-btn:disabled{opacity:.6;cursor:progress}
+.hdl-quiz-total{margin-top:10px;font-weight:700}.hdl-quiz-total.ok{color:var(--g)}.hdl-quiz-total.bad{color:#ff8a7f}
+.hdl-source{margin-top:22px;font-size:12.5px;color:var(--m)}
+.hdl-file a{color:var(--g);font-weight:700}

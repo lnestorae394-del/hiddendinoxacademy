@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="robots" content="noindex">
+<title>HIDDEN DINOX ACADEMY</title>
+<link rel="icon" href="assets/brand/hd-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/hd-system.css?v=20261026-2">
+<style>
+  :root{color-scheme:dark}
+  html,body{margin:0;background:#000;color:#eef3ea;font:16px/1.6 "Manrope",system-ui,sans-serif}
+  .bl{min-height:calc(100vh - 60px);display:grid;place-items:center;padding:24px 18px calc(24px + env(safe-area-inset-bottom,0px))}
+  .bl-card{position:relative;box-sizing:border-box;max-width:520px;width:100%;text-align:center;padding:30px 22px;border:1px solid rgba(139,234,36,.25);border-radius:20px;background:radial-gradient(70% 60% at 50% 0%,rgba(116,204,0,.14),transparent 70%),#050705}
+  .bl-card img{width:min(250px,62vw);height:auto;filter:drop-shadow(0 0 26px rgba(116,204,0,.35))}
+  .bl-card h1{font:700 clamp(22px,5vw,30px)/1.2 "Unbounded",system-ui,sans-serif;margin:14px 0 10px;overflow-wrap:break-word}
+  .bl-card p{color:#cdd6c8;margin:0 0 20px}
+  .bl-actions{display:flex;flex-direction:column;gap:10px}
+  .bl-btn{display:flex;align-items:center;justify-content:center;min-height:48px;padding:0 18px;border-radius:999px;font:700 15px "Manrope",system-ui,sans-serif;text-decoration:none;border:0;cursor:pointer}
+  .bl-btn.primary{background:#8bea24;color:#061000}.bl-btn.ghost{background:transparent;color:#eef3ea;border:1px solid rgba(255,255,255,.2)}
+  .bl-btn:focus-visible{outline:2px solid #8bea24;outline-offset:3px}
+</style>
+</head>
+<body>
+<header class="hd-head"><a class="hd-brand" href="/"><img src="assets/brand/hd-logo.png" alt="" width="32" height="24"><span class="hd-brand-t"><b>Hidden Dinox</b><small>Academy</small></span></a>
+  <div class="hd-head-r"><nav class="hd-langs" aria-label="Language"><button type="button" data-lang="ru">RU</button><button type="button" data-lang="en">EN</button><button type="button" data-lang="ua">UA</button></nav></div></header>
+<main class="bl"><section class="bl-card" aria-labelledby="blT">
+  <img src="assets/mascot/mascot-crying-blocked.webp" alt="" width="600" height="590">
+  <h1 id="blT"></h1><p id="blP"></p>
+  <div class="bl-actions"><a class="bl-btn primary" id="blSupport" href="https://t.me/hiddendinoxsupport" target="_blank" rel="noopener noreferrer"></a>
+    <button class="bl-btn ghost" type="button" id="blNew"></button></div>
+</section></main>
+<script src="js/config.js?v=20261026-2"></script>
+<script src="js/api.js?v=20261026-2"></script>
+<script type="module" src="js/firebase.js?v=20261026-2"></script>
+<script src="js/pages/blocked.js?v=20261026-2"></script>
+</body>
+</html>
