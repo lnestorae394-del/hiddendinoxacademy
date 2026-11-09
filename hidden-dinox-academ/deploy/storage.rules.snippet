@@ -1,0 +1,3 @@
+// ДОБАВЬТЕ эти строки в существующие правила Firebase Storage (не заменяя их): клиентам запрещён любой доступ к файлам Video Studio.
+// Сервер (Admin SDK) и подписанные ссылки правилами не ограничиваются.
+match /video-studio/{allPaths=**} { allow read, write: if false; }

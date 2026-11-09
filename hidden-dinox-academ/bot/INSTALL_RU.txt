@@ -1,0 +1,19 @@
+Изменение текста Hidden Dinox Academy
+
+Заменить в GitHub только два файла по путям:
+- hidden-dinox-academy/bot/core.js
+- hidden-dinox-academy/bot/index.js
+
+Новый текст /start:
+Добро пожаловать в Hidden Dinox Academy 🔥
+
+Нажми кнопку ниже, чтобы открыть академию и получить доступ к обучению.
+
+Inline-кнопки:
+- 🟢 Открыть академию
+- Поддержка @hiddendinoxsupport
+
+Синяя Menu Button:
+- Открыть академию
+
+Остальные файлы не менять.
