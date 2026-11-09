@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Hidden Dinox Academy — проверка баланса</title>
+<link rel="icon" href="assets/brand/hd-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/auth.css?v=20261026-2">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+<div class="bg" aria-hidden="true"><canvas id="particles"></canvas></div>
+<div class="app" id="app">
+  <header>
+    <a class="brand" href="/" aria-label="Hidden Dinox Academy">
+      <img src="assets/brand/hd-logo.png" alt="HiddenDinox" width="386" height="288">
+      <div class="wordmark">HIDDEN DINOX<span>ACADEMY</span></div>
+    </a>
+    <div class="ac-head">
+      <div class="langs" role="group" aria-label="Language"><span class="pill" aria-hidden="true"></span>
+        <button type="button" data-lang="ru" aria-pressed="true">RU</button><button type="button" data-lang="en" aria-pressed="false">EN</button><button type="button" data-lang="ua" aria-pressed="false">UA</button></div>
+    </div>
+  </header>
+  <main id="main" aria-busy="true"></main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="js/i18n-auth.js?v=20261026-2"></script>
+<script src="js/config.js?v=20261026-2"></script>
+<script src="js/api.js?v=20261026-2"></script>
+<script src="js/ui.js?v=20261026-2"></script>
+<script type="module" src="js/firebase.js?v=20261026-2" onerror="window.__hdFbReject&&window.__hdFbReject({code:'NETWORK'})"></script>
+<script src="js/pages/deposit.js?v=20261026-2"></script>
+</body>
+</html>

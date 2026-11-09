@@ -1,0 +1,37 @@
+/* Тренировка на графике — в стиле страниц обучения */
+.ct-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 16px}
+.ct-tab{padding:9px 16px;border-radius:999px;border:1px solid rgba(139,234,36,.25);background:transparent;color:inherit;font:inherit;font-weight:600;cursor:pointer}
+.ct-tab[aria-selected="true"]{background:#8bea24;color:#061006;border-color:#8bea24}
+.ct-label{display:inline-block;max-width:100%;box-sizing:border-box;margin:0 0 10px;padding:6px 12px;border-radius:10px;font-size:12.5px;font-weight:700;overflow-wrap:anywhere}
+.ct-label.synthetic{background:rgba(255,209,102,.12);color:#ffd166;border:1px solid rgba(255,209,102,.35)}
+.ct-label.historical{background:rgba(139,234,36,.08);color:#9cf03a;border:1px solid rgba(139,234,36,.3)}
+.ct-chart{width:100%;border-radius:16px;border:1px solid rgba(139,234,36,.16);background:#070a07;display:block;touch-action:manipulation;cursor:crosshair}
+.ct-q{margin:14px 0 6px;font-size:16px;line-height:1.45}
+.ct-form{display:grid;gap:16px;margin-top:8px}
+/* группы вариантов: ровная сетка одинаковых карточек */
+.ct-group{border:0;margin:0;padding:0;min-width:0}
+.ct-group legend{font-weight:700;margin-bottom:8px;padding:0}
+.ct-opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,210px),1fr));gap:8px}
+.ct-opt{display:flex;align-items:flex-start;gap:10px;box-sizing:border-box;width:100%;min-height:48px;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.02);cursor:pointer;line-height:1.35;text-align:left}
+.ct-opt span{flex:1;min-width:0;overflow-wrap:anywhere}
+.ct-opt input{flex:none;width:18px;height:18px;margin:1px 0 0;accent-color:#8bea24}
+.ct-opt:has(input:checked){border-color:#8bea24;background:rgba(139,234,36,.08)}
+.ct-opt:focus-within{outline:2px solid rgba(139,234,36,.6);outline-offset:1px}
+/* поля ввода — только текстовые */
+.ct-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px}
+.ct-field{display:grid;gap:6px;min-width:0;align-content:start}
+.ct-field span{font-size:13.5px;color:#cfd6cb;overflow-wrap:anywhere}
+.ct-field input,.ct-field textarea{width:100%;box-sizing:border-box;padding:11px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:#0b0f0b;color:inherit;font:inherit}
+.ct-field input:focus,.ct-field textarea:focus{outline:none;border-color:#8bea24}
+.ct-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center}
+.ct-actions .lp-btn{min-height:44px}
+.ct-actions[hidden],.ct-confirm[hidden]{display:none}   /* display:flex не должен перекрывать hidden */
+.ct-confirm{padding:14px;border-radius:14px;border:1px solid rgba(255,209,102,.4);background:rgba(255,209,102,.07)}
+.ct-confirm p{margin:0 0 10px}
+.ct-loading{padding:40px 0;text-align:center;color:#9aa595}
+.ct-score{font-size:30px;font-weight:800;color:#9cf03a}
+.ct-crit{display:grid;gap:6px;margin:10px 0}.ct-crit div{display:flex;justify-content:space-between;gap:10px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.03)}
+.ct-kind{padding:12px 14px;border-radius:12px;background:rgba(139,234,36,.08);margin:10px 0}
+.ct-hist{display:grid;gap:8px}.ct-hist>div{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;padding:12px;border-radius:14px;border:1px solid rgba(139,234,36,.16)}
+.ct-hist .sk{color:#ffd166;font-weight:700}
+@media (max-width:560px){.ct-actions{flex-direction:column-reverse;align-items:stretch}.ct-actions .lp-btn{width:100%;text-align:center}}

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#06080a">
+<title>HIDDEN DINOX | VIDEO STUDIO</title>
+<link rel="icon" href="/academy/assets/brand/hd-logo.png">
+<link rel="stylesheet" href="video-studio.css?v=2">
+</head>
+<body>
+<div id="app"><div class="vs-center"><div class="vs-loader">Загрузка Video Studio…</div></div></div>
+<script src="/academy/js/config.js"></script>
+<script>
+/* Готовность Firebase: общий модуль /academy/js/firebase.js сообщает о себе через window.__hdFbResolve (так же, как на других страницах Academy) */
+window.__vsFb = new Promise(function (res, rej) { window.__hdFbResolve = res; window.__hdFbReject = rej; });
+window.__vsFb.catch(function () {});
+</script>
+<script type="module" src="/academy/js/firebase.js" onerror="window.__hdFbReject&&window.__hdFbReject({code:'NETWORK'})"></script>
+<script src="vs-core.js"></script>
+<script src="vs/core.js?v=3"></script>
+<script src="vs/shell.js?v=3"></script>
+<script src="vs/upload.js?v=2"></script>
+<script src="vs/editor.js?v=3"></script>
+<script src="vs/view-projects.js?v=3"></script>
+<script src="vs/view-clips.js?v=3"></script>
+<script src="vs/views-overview.js?v=3"></script>
+<script src="vs/view-library.js?v=2"></script>
+<script src="vs/view-settings.js?v=3"></script>
+<script>VS.start();</script>
+</body>
+</html>
