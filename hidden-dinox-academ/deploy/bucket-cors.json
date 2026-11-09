@@ -1,0 +1,1 @@
+[{ "origin": ["https://hiddendinox.com"], "method": ["PUT", "GET", "HEAD", "OPTIONS"], "responseHeader": ["Content-Type", "Content-Range", "Range", "x-goog-resumable"], "maxAgeSeconds": 3600 }]
