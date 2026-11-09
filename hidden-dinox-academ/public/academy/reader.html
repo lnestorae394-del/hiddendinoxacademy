@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="robots" content="noindex">
+<title>THE HIDDEN REACTION SYSTEM — HIDDEN DINOX ACADEMY</title>
+<link rel="icon" href="assets/brand/hd-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/reader.css?v=20261026-2">
+</head>
+<body>
+<div class="rd" id="rd">
+  <header class="rd-top">
+    <a class="rd-back" id="back" href="academy.html"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span data-t="readerBack"></span></a>
+    <h1 class="rd-title">THE HIDDEN REACTION SYSTEM</h1>
+    <button class="rd-icon" id="fs" type="button" data-tl="readerFull"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+  </header>
+  <main class="rd-stage" id="stage" tabindex="0" aria-live="polite">
+    <div class="rd-msg" id="msg"><span class="rd-spin" aria-hidden="true"></span><span data-t="readerLoading"></span></div>
+    <canvas id="page" hidden></canvas>
+  </main>
+  <nav class="rd-bar" aria-label="pages">
+    <button class="rd-btn" id="prev" type="button" data-tl="readerPrev" disabled><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <form class="rd-goto" id="goto"><input id="num" type="number" inputmode="numeric" min="1" value="1" data-tl="readerPage"><span class="rd-of" id="of">/ —</span></form>
+    <button class="rd-btn" id="next" type="button" data-tl="readerNext" disabled><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></button>
+    <span class="rd-sep" aria-hidden="true"></span>
+    <button class="rd-btn sm" id="zout" type="button" data-tl="readerZoomOut">−</button>
+    <button class="rd-btn fit" id="zfit" type="button" data-t="readerFit"></button>
+    <button class="rd-btn sm" id="zin" type="button" data-tl="readerZoomIn">+</button>
+  </nav>
+</div>
+<script src="js/i18n-academy.js?v=20261026-2"></script>
+<script src="js/config.js?v=20261026-2"></script>
+<script src="js/api.js?v=20261026-2"></script>
+<script src="js/ui.js?v=20261026-2"></script>
+<script type="module" src="js/firebase.js?v=20261026-2" onerror="window.__hdFbReject&&window.__hdFbReject({code:'NETWORK'})"></script>
+<script type="module" src="js/pages/reader.js?v=20261026-2"></script>
+</body>
+</html>
