@@ -1,0 +1,9 @@
+[
+  {
+    "AllowedOrigins": ["https://hidden-dinox-video-staging.onrender.com"],
+    "AllowedMethods": ["GET", "PUT", "HEAD"],
+    "AllowedHeaders": ["*"],
+    "ExposeHeaders": ["ETag", "Content-Length", "Content-Range", "Accept-Ranges"],
+    "MaxAgeSeconds": 3600
+  }
+]
